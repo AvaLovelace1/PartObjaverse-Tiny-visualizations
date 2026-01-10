@@ -48,8 +48,16 @@ def main() -> None:
     st.write(
         "This app visualizes samples from the "
         "[PartObjaverse-Tiny](https://yhyang-myron.github.io/SAMPart3D-website/) dataset (Yang et al., 2024). "
-        f"There are {len(uids)} sample meshes in total, across {len(label_set)} categories."
+        f"There are **{len(uids)}** sample meshes in total, across **{len(label_set)}** categories."
     )
+    st.write(
+        "<small style='color: #9ca3af;'>"
+        "PartObjaverse-Tiny is licenced under [CC-BY-NC-4.0](https://spdx.org/licenses/CC-BY-NC-4.0). "
+        "I am not affiliated with the creators of PartObjaverse-Tiny."
+        "</small>",
+        unsafe_allow_html=True,
+    )
+    st.html("<div style='height: 16px;'></div>")
 
     # Category and page selection
     select_cols = st.columns([4, 2, 1, 1], width=600)
@@ -87,7 +95,7 @@ def display_sample_row(uid: str, part_labels: list[str]) -> None:
     with cols[1]:
         model_viewer(colored_mesh_file)
     with cols[2]:
-        st.write(f"**UID: {uid}**")
+        st.write(f"**UID:** {uid}")
         legend_html = "<div style='max-height: 400px; overflow-y: auto;'>"
         for label_idx, part_label in enumerate(part_labels):
             color = COLORS[label_idx % len(COLORS)]
