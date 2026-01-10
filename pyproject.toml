@@ -1,0 +1,18 @@
+[project]
+name = "partobjaverse-tiny-visualizations"
+version = "0.1.0"
+description = "A webapp for visualizing samples from the PartObjaverse-Tiny dataset (Yang et al., 2024)."
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "huggingface-hub",
+    "rich>=14.2.0",
+    "scipy",
+    "streamlit",
+    "trimesh",
+]
+
+[dependency-groups]
+dev = [
+    "black",
+]
