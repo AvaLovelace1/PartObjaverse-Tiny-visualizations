@@ -1,0 +1,102 @@
+import json
+import logging
+import os
+import zipfile
+
+from huggingface_hub import hf_hub_download
+
+logger = logging.getLogger(__name__)
+
+# Visually distinct colors from https://sashamaps.net/docs/resources/20-colors/
+COLORS = [
+    "#e6194B",
+    "#3cb44b",
+    "#ffe119",
+    "#4363d8",
+    "#f58231",
+    "#911eb4",
+    "#42d4f4",
+    "#f032e6",
+    "#bfef45",
+    "#fabed4",
+    "#469990",
+    "#dcbeff",
+    "#9A6324",
+    "#fffac8",
+    "#800000",
+    "#aaffc3",
+    "#808000",
+    "#ffd8b1",
+    "#000075",
+    "#a9a9a9",
+    "#ffffff",
+    "#000000",
+]
+
+
+def hex2rgb(hex_str: str) -> tuple[int, int, int]:
+    if hex_str[0] == "#":
+        hex_str = hex_str[1:]
+    return int(hex_str[0:2], 16), int(hex_str[2:4], 16), int(hex_str[4:6], 16)
+
+
+MESHES_DIR = "PartObjaverse-Tiny_mesh"
+COLORED_MESHES_DIR = os.path.join("PartObjaverse-Tiny_mesh_colored")
+SEMANTIC_GT_DIR = "PartObjaverse-Tiny_semantic_gt"
+
+
+def download_meshes(out_dir: str) -> None:
+    if os.path.exists(os.path.join(out_dir, MESHES_DIR)):
+        logger.info(
+            f"Mesh directory {os.path.join(out_dir, MESHES_DIR)} already exists. Skipping mesh download."
+        )
+        return
+
+    file_path = hf_hub_download(
+        repo_id="yhyang-myron/PartObjaverse-Tiny",
+        filename="PartObjaverse-Tiny_mesh.zip",
+        repo_type="dataset",
+    )
+    with zipfile.ZipFile(file_path) as zip_ref:
+        zip_ref.extractall(out_dir)
+
+
+def download_colored_meshes(out_dir: str) -> None:
+    if os.path.exists(os.path.join(out_dir, COLORED_MESHES_DIR)):
+        logger.info(
+            f"Colored mesh directory {os.path.join(out_dir, COLORED_MESHES_DIR)} already exists. Skipping colored mesh download."
+        )
+        return
+
+    file_path = hf_hub_download(
+        repo_id="AvaLovelace/PartObjaverse-Tiny-visualizations",
+        filename="PartObjaverse-Tiny_mesh_colored.zip",
+        repo_type="dataset",
+    )
+    with zipfile.ZipFile(file_path) as zip_ref:
+        zip_ref.extractall(out_dir)
+
+
+def download_semantic_gt(out_dir: str) -> None:
+    if os.path.exists(os.path.join(out_dir, SEMANTIC_GT_DIR)):
+        logger.info(
+            f"Semantic GT directory {SEMANTIC_GT_DIR} already exists. Skipping semantic GT download."
+        )
+        return
+    file_path = hf_hub_download(
+        repo_id="yhyang-myron/PartObjaverse-Tiny",
+        filename="PartObjaverse-Tiny_semantic_gt.zip",
+        repo_type="dataset",
+    )
+    with zipfile.ZipFile(file_path) as zip_ref:
+        zip_ref.extractall(out_dir)
+
+
+def get_label_set() -> dict[str, dict[str, list[str]]]:
+    file_path = hf_hub_download(
+        repo_id="yhyang-myron/PartObjaverse-Tiny",
+        filename="PartObjaverse-Tiny_semantic.json",
+        repo_type="dataset",
+    )
+    with open(file_path) as f:
+        return json.load(f)

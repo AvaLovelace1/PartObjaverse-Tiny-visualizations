@@ -11,4 +11,6 @@ wheels/
 
 .idea/
 static/
+PartObjaverse-Tiny_mesh/
+PartObjaverse-Tiny_mesh_colored/
 PartObjaverse-Tiny_semantic_gt/
