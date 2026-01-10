@@ -116,6 +116,7 @@ def main() -> None:
         display_sample_row(uid, part_labels)
 
 
+@st.cache_resource
 def download_meshes(out_dir: str) -> None:
     if os.path.exists(os.path.join(out_dir, MESHES_DIR)):
         logger.info(
@@ -132,6 +133,7 @@ def download_meshes(out_dir: str) -> None:
         zip_ref.extractall(out_dir)
 
 
+@st.cache_resource
 def download_semantic_gt(out_dir: str) -> None:
     if os.path.exists(os.path.join(out_dir, SEMANTIC_GT_DIR)):
         logger.info(
@@ -147,6 +149,7 @@ def download_semantic_gt(out_dir: str) -> None:
         zip_ref.extractall(out_dir)
 
 
+@st.cache_resource
 def get_label_set() -> dict[str, dict[str, list[str]]]:
     file_path = hf_hub_download(
         repo_id="yhyang-myron/PartObjaverse-Tiny",
