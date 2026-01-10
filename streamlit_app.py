@@ -71,13 +71,17 @@ def main() -> None:
     # Color meshes
     if not os.path.exists(COLORED_MESHES_PATH):
         os.makedirs(COLORED_MESHES_PATH)
-        with mp.Pool() as pool:
-            for _ in track(
-                pool.imap_unordered(color_mesh_file, uids),
-                description="Processing meshes...",
-                total=len(uids),
-            ):
-                pass
+        if os.environ["DISABLE_MULTIPROCESSING"] == "1":
+            for uid in track(uids, description="Processing meshes...", total=len(uids)):
+                color_mesh_file(uid)
+        else:
+            with mp.Pool() as pool:
+                for _ in track(
+                    pool.imap_unordered(color_mesh_file, uids),
+                    description="Processing meshes...",
+                    total=len(uids),
+                ):
+                    pass
 
     # Streamlit app
     st.set_page_config(
