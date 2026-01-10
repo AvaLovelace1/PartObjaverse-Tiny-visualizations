@@ -49,7 +49,6 @@ MESHES_DIR = "PartObjaverse-Tiny_mesh"
 SEMANTIC_GT_DIR = "PartObjaverse-Tiny_semantic_gt"
 MESHES_PATH = os.path.join(STATIC_DIR, MESHES_DIR)
 COLORED_MESHES_PATH = os.path.join(STATIC_DIR, "PartObjaverse-Tiny_mesh_colored")
-os.makedirs(COLORED_MESHES_PATH, exist_ok=True)
 SEMANTIC_GT_PATH = os.path.join(".", SEMANTIC_GT_DIR)
 
 
@@ -63,23 +62,16 @@ def main() -> None:
         for mesh_label_set in label_set.values()
         for uid, part_labels in mesh_label_set.items()
     ]
-    with mp.Pool() as pool:
-        for _ in track(
-            pool.imap_unordered(process_mesh_file, uids),
-            description="Processing meshes...",
-            total=len(uids),
-        ):
-            pass
 
-
-def process_mesh_file(uid: str) -> None:
-    mesh_file = os.path.join(MESHES_PATH, f"{uid}.glb")
-    mesh = trimesh.load_scene(mesh_file).to_mesh()
-    semantic_gt_file = os.path.join(SEMANTIC_GT_PATH, f"{uid}.npy")
-    semantic_gt = np.load(semantic_gt_file)
-    colored_mesh = color_mesh(mesh, semantic_gt)
-    colored_mesh_file = os.path.join(COLORED_MESHES_PATH, f"{uid}.glb")
-    colored_mesh.export(colored_mesh_file)
+    if not os.path.exists(COLORED_MESHES_PATH):
+        os.makedirs(COLORED_MESHES_PATH)
+        with mp.Pool() as pool:
+            for _ in track(
+                pool.imap_unordered(color_mesh_file, uids),
+                description="Processing meshes...",
+                total=len(uids),
+            ):
+                pass
 
 
 def download_meshes(out_dir: str) -> None:
@@ -98,16 +90,6 @@ def download_meshes(out_dir: str) -> None:
         zip_ref.extractall(out_dir)
 
 
-def get_label_set() -> dict[str, dict[str, list[str]]]:
-    file_path = hf_hub_download(
-        repo_id="yhyang-myron/PartObjaverse-Tiny",
-        filename="PartObjaverse-Tiny_semantic.json",
-        repo_type="dataset",
-    )
-    with open(file_path) as f:
-        return json.load(f)
-
-
 def download_semantic_gt(out_dir: str) -> None:
     if os.path.exists(os.path.join(out_dir, SEMANTIC_GT_DIR)):
         logger.info(
@@ -121,6 +103,26 @@ def download_semantic_gt(out_dir: str) -> None:
     )
     with zipfile.ZipFile(file_path) as zip_ref:
         zip_ref.extractall(out_dir)
+
+
+def get_label_set() -> dict[str, dict[str, list[str]]]:
+    file_path = hf_hub_download(
+        repo_id="yhyang-myron/PartObjaverse-Tiny",
+        filename="PartObjaverse-Tiny_semantic.json",
+        repo_type="dataset",
+    )
+    with open(file_path) as f:
+        return json.load(f)
+
+
+def color_mesh_file(uid: str) -> None:
+    mesh_file = os.path.join(MESHES_PATH, f"{uid}.glb")
+    mesh = trimesh.load_scene(mesh_file).to_mesh()
+    semantic_gt_file = os.path.join(SEMANTIC_GT_PATH, f"{uid}.npy")
+    semantic_gt = np.load(semantic_gt_file)
+    colored_mesh_file = os.path.join(COLORED_MESHES_PATH, f"{uid}.glb")
+    colored_mesh = color_mesh(mesh, semantic_gt)
+    colored_mesh.export(colored_mesh_file)
 
 
 def color_mesh(mesh: trimesh.Trimesh, semantic_gt: np.ndarray) -> trimesh.Trimesh:
