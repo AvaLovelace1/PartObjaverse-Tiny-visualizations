@@ -5,9 +5,11 @@ import os
 import zipfile
 
 import numpy as np
+import streamlit as st
 import trimesh
 from huggingface_hub import hf_hub_download
 from rich.progress import track
+from streamlit.components.v1 import html
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
@@ -58,11 +60,15 @@ def main() -> None:
 
     label_set = get_label_set()
     uids = [
-        uid
+        uid for mesh_label_set in label_set.values() for uid in mesh_label_set.keys()
+    ]
+    part_labels = [
+        labels
         for mesh_label_set in label_set.values()
-        for uid, part_labels in mesh_label_set.items()
+        for labels in mesh_label_set.values()
     ]
 
+    # Color meshes
     if not os.path.exists(COLORED_MESHES_PATH):
         os.makedirs(COLORED_MESHES_PATH)
         with mp.Pool() as pool:
@@ -72,6 +78,30 @@ def main() -> None:
                 total=len(uids),
             ):
                 pass
+
+    # Streamlit app
+    st.set_page_config(
+        page_title="PartObjaverse-Tiny", page_icon=":robot:", layout="wide"
+    )
+    st.title("PartObjaverse-Tiny")
+    st.write(
+        "This app visualizes samples from the "
+        "[PartObjaverse-Tiny](https://yhyang-myron.github.io/SAMPart3D-website/) dataset (Yang et al., 2024). "
+        f"There are {len(uids)} sample meshes in total, across {len(label_set)} categories."
+    )
+
+    category_select = st.selectbox(
+        "Select category",
+        options=list(label_set.keys()),
+        format_func=lambda category: f"{category} ({len(label_set[category])} samples)",
+        width=384,
+    )
+    uids = list(label_set[category_select].keys())
+    part_labels = list(label_set[category_select].values())
+
+    for uid, part_labels in zip(uids, part_labels):
+        st.html("<div style='height: 8px;'></div>")
+        display_sample_row(uid, part_labels)
 
 
 def download_meshes(out_dir: str) -> None:
@@ -138,6 +168,46 @@ def color_mesh(mesh: trimesh.Trimesh, semantic_gt: np.ndarray) -> trimesh.Trimes
         color = hex2rgb(COLORS[label % len(COLORS)]) + (255,)
         mesh.visual.face_colors[face_idx] = color
     return mesh
+
+
+def display_sample_row(uid: str, part_labels: list[str]) -> None:
+    mesh_file = os.path.join(MESHES_PATH, f"{uid}.glb")
+    colored_mesh_file = os.path.join(COLORED_MESHES_PATH, f"{uid}.glb")
+
+    cols = st.columns(3, width=1230)
+    with cols[0]:
+        model_viewer(mesh_file)
+    with cols[1]:
+        model_viewer(colored_mesh_file)
+    with cols[2]:
+        st.write(f"**UID: {uid}**")
+        legend_html = "<div style='max-height: 400px; overflow-y: auto;'>"
+        for label_idx, part_label in enumerate(part_labels):
+            color = COLORS[label_idx % len(COLORS)]
+            legend_html += legend_entry(color, part_label)
+        legend_html += "</div>"
+        st.html(legend_html)
+
+
+def legend_entry(color: str, label: str) -> str:
+    return f"""
+        <div style="display: flex; align-items: center; margin-bottom: 4px;">
+            <div style="width: 16px; height: 16px; background-color: {color}; margin-right: 8px; border-radius: 2px;"></div>
+            <span>{label}</span>
+        </div>
+        """
+
+
+def model_viewer(mesh_file: str) -> None:
+    html(
+        f"""
+            <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/4.0.0/model-viewer.min.js"></script>
+            <model-viewer src="app/{mesh_file}" alt="3D Model" auto-rotate camera-controls
+                          style="width: 384px; height: 384px; background-color: #1f2937; border-radius: 8px;">
+            </model-viewer>
+            """,
+        height=400,
+    )
 
 
 if __name__ == "__main__":

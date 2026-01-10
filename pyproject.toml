@@ -6,10 +6,11 @@ readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
     "huggingface-hub",
-    "rich>=14.2.0",
+    "rich",
     "scipy",
     "streamlit",
     "trimesh",
+    "watchdog",
 ]
 
 [dependency-groups]
