@@ -90,16 +90,28 @@ def main() -> None:
         f"There are {len(uids)} sample meshes in total, across {len(label_set)} categories."
     )
 
-    category_select = st.selectbox(
-        "Select category",
-        options=list(label_set.keys()),
-        format_func=lambda category: f"{category} ({len(label_set[category])} samples)",
-        width=384,
-    )
-    uids = list(label_set[category_select].keys())
-    part_labels = list(label_set[category_select].values())
+    # Category and page selection
+    select_cols = st.columns([4, 2, 1, 1], width=600)
+    with select_cols[0]:
+        category_select = st.selectbox(
+            "Category",
+            options=list(label_set.keys()),
+            format_func=lambda category: f"{category} ({len(label_set[category])} samples)",
+        )
+    with select_cols[1]:
+        max_pages = (len(label_set[category_select]) + 3) // 4
+        page_select = st.selectbox(
+            "Page",
+            options=list(range(max_pages)),
+            format_func=lambda page: f"{page + 1} of {max_pages}",
+        )
 
-    for uid, part_labels in zip(uids, part_labels):
+    # Display samples for the selected category and page
+    start_idx = page_select * 4
+    end_idx = start_idx + 4
+    uids_subset = list(label_set[category_select].keys())[start_idx:end_idx]
+    part_labels = list(label_set[category_select].values())[start_idx:end_idx]
+    for uid, part_labels in zip(uids_subset, part_labels):
         st.html("<div style='height: 8px;'></div>")
         display_sample_row(uid, part_labels)
 
