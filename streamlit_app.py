@@ -53,7 +53,7 @@ def main() -> None:
     st.write(
         "<small style='color: #9ca3af;'>"
         "PartObjaverse-Tiny is licenced under [CC-BY-NC-4.0](https://spdx.org/licenses/CC-BY-NC-4.0). "
-        "I am not affiliated with the creators of PartObjaverse-Tiny."
+        "This app is not affiliated with the creators of PartObjaverse-Tiny."
         "</small>",
         unsafe_allow_html=True,
     )
